@@ -1,0 +1,2 @@
+ansible-playbook -i hosts provisionar.yml -u ubuntu --private-key id_rsa
+docker run -it -v ${PWD}:/app -w /app --entrypoint "" hashicorp/terraform:light sh

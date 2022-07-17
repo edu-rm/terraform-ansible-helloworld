@@ -1,0 +1,75 @@
+- hosts: all
+  vars:
+    NODEJS_VERSION: "16"
+    repo_url: "https://github.com/jatins/express-hello-world/archive/refs/heads/master.zip"
+    repo_path: "/home/express-hello-world-master"
+    exectuable_path: "/home/express-hello-world-master/index.js"
+    ansible_distribution_release: "xenial" #trusty
+    ansible_user_id: "ubuntu"
+    mysrc: "/root/.nvm/versions/node/v16.16.0/bin/node"
+    mylink: "/usr/bin/node"
+    server_id: "Server1"
+
+  tasks:
+    - name: "Instala pacotes"
+      apt:
+        name: "{{ item }}"
+        state: latest
+      become: yes
+      with_items:
+        - libc6
+        - unzip
+
+    - name: "nvm"
+      become: yes
+      shell: >
+        curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+      args:
+        executable: /bin/bash
+        chdir: "{{ ansible_env.HOME }}"
+        creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+
+    - name: Install node and set version
+      become: yes
+      shell: >
+        /bin/bash -c "source ~/.nvm/nvm.sh && nvm install {{NODEJS_VERSION}} && nvm alias default {{NODEJS_VERSION}}"
+        creates=/home/{{ ansible_user_id }}/.nvm/alias
+
+    - name: extract archive
+      become: yes
+      unarchive:
+        src: "{{ repo_url }}"
+        dest: "/home"
+        remote_src: true
+        validate_certs: true
+
+    - name: Creating a symlink
+      become: yes
+      ansible.builtin.file:
+        src: "{{ mysrc }}"
+        dest: "{{ mylink }}"
+        state: link
+
+    - name: Add the globally package "pm2".
+      become: yes
+      community.general.npm:
+        executable: "/root/.nvm/versions/node/v16.16.0/bin/npm"
+        name: pm2
+        global: yes
+
+    - name: Install packages based on package.json using the npm
+      become: yes
+      community.general.npm:
+        executable: "/root/.nvm/versions/node/v16.16.0/bin/npm"
+        path: "{{ repo_path }}"
+
+
+    - name: pm2 delete
+      ansible.builtin.shell: /root/.nvm/versions/node/v16.16.0/bin/pm2 delete {{ server_id }}
+      become: yes
+      ignore_errors: True
+
+    - name: start pm2 process
+      ansible.builtin.shell: /root/.nvm/versions/node/v16.16.0/bin/pm2 start -x -i 4 --name "{{server_id}}" {{exectuable_path}}
+      become: yes
+      ignore_errors: True
