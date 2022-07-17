@@ -11,8 +11,3 @@ resource "aws_instance" "maquina_wp" {
   }
   vpc_security_group_ids = ["${aws_security_group.terraform_security_group.id}"]
 }
-
-
-# para liberar a internet interna da maquina, colocar regra do outbound "Outbound rules" como "All traffic"
-# ssh -i ~/.ssh/terraform-aws ubuntu@ec2-54-234-131-240.compute-1.amazonaws.com 
-# conferir 
