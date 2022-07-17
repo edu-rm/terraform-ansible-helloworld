@@ -37,6 +37,3 @@ resource "aws_security_group" "terraform_security_group" {
     Name = "acesso_geral"
   }
 }
-
-# para liberar a internet interna da maquina, colocar regra do outbound "Outbound rules" como "All traffic"
-# ssh -i ~/.ssh/terraform-aws ubuntu@ec2-54-242-44-197.compute-1.amazonaws.com
